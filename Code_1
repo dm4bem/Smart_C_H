@@ -131,8 +131,8 @@ pd.DataFrame(C, columns=['Capacity'])
 
 Φoa = α * Sexta * E
 Φob = α * Sextb * E
-Φia1 =  E * Sina1 * 0.2
-Φia2 =  E * Sina2 * 0.8
+Φia1 =  E * Sga * 0.2
+Φia2 =  E * Sga * 0.8
 Φib1 =  0                   # we assume that the sun is not facing the windows of room b
 Φib2 =  0
 Φa = 0
