@@ -1,12 +1,6 @@
 import numpy as np
 import pandas as pd
-from scipy.linalg import inv
 import matplotlib.pyplot as plt
-
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-
 import dm4bem
 
 h = 3               # m height of the building
@@ -18,11 +12,14 @@ Sgb = 9              # total window area in second room
 Sd = 2              # Surface area of the door between room a and b
 # Sci = 78             # m² surface area of concrete & insulation of the 4 walls
 # Sc = 13              # m² surface area of concrete of the 1 wall
-w = 0.2     # m, wall thickness
+w = 0.28     # m, wall thickness
+wi = 0.2     #inside wall thickness in m
 # S = 20.0    # m², wall surface area
 Sexta = l*h - Sga + La*h*2
 Sextb = l*h - Sgb + Lb*h*2
 Sint = w*h - Sd
+Sina1 = l*h - Sga
+Sina2 = l*h - Sd
 T0 = -5.0   # °C, outside air temperature
 Ti = 24.0   # °C, inside air temperature
 λ = 1.0     # W/(m·K), thermal conductivity
@@ -31,39 +28,12 @@ hi = 8.0    # W/(m²·K), outside convection coefficient
 α = 0.70    # -, absorbtance of outdoor surface
 E = 200.0   # W/m², solar irradiance on the outdoor surface
 
-# Calculate the conductances
-G0 = ho*Sexta
-G1 = 1/2*lambda_c*Sexta/w
-G2 = 1/2*lambda_c*Sexta/w
-G3 = 1/2*lambda_i*Sexta/w
-G4 = 1/2*lambda_i*Sexta/w
-G5 = hi*Sexta
-G6 = hi*Sint
-G7 = 1/2*lambda_c*Sint/wi
-G8 = 1/2*lambda_c*Sint/wi
-G9 = hi*Sint
-G10 = hi*Sextb
-G11 = 1/2*lambda_i*Sextb/w
-G12 = 1/2*lambda_i*Sextb/w
-G13 = 1/2*lambda_c*Sextb/w
-G14 = 1/2*lambda_c*Sextb/w
-G15 = ho*Sextb
-G16 = # long wave radiation in room a
-G17 = ho*Sga
-G18 = lambda_g*Sga/wg
-G19 = hi*Sga
-G20 = # transport through door
-G21 = hi*Sgb
-G22 = # long wave radiation in room b
-G23 = lambda_g*Sgb/wg
-G24 = ho*Sgb
-G25 = Ka                # Controller constant for room a
-G26 = Kb                # Controller constant for room b
-# 
-
 air = {'Density': 1.2,                      # kg/m³
        'Specific heat': 1000}               # J/(kg·K)
 pd.DataFrame(air, index=['Air'])
+
+np.set_printoptions(precision=1)
+
 
 concrete = {'Conductivity': 1.400,          # W/(m·K)
             'Density': 2300.0,              # kg/m³
@@ -140,6 +110,7 @@ GLW = 1 / (1 / GLW1 + 1 / GLW12 + 1 / GLW2)
 Va = l**3                   # m³, volume of air
 ACH = 1                     # 1/h, air changes per hour
 Va_dot = ACH / 3600 * Va    # m³/s, air infiltration
+m_dot = air['Density'] * Va_dot               # mass air flow rate
 
 # ventilation & advection
 Gv = air['Density'] * air['Specific heat'] * Va_dot
@@ -160,11 +131,14 @@ pd.DataFrame(C, columns=['Capacity'])
 
 Φoa = α * Sexta * E
 Φob = α * Sextb * E
-Φia1 =  E * Sg * 0.2
-Φia2 =  E * Sg * 0.8
-Φib1 =  E * Sg * 0.8
-Φib2 =  E * Sg * 0.2
+Φia1 =  E * Sina1 * 0.2
+Φia2 =  E * Sina2 * 0.8
+Φib1 =  0                   # we assume that the sun is not facing the windows of room b
+Φib2 =  0
 Φa = 0
+
+nq, nθ = 25, 19  # number of flow-rates branches and of temperaure nodes
+nfinal = 6       # node for which we want the final value
 
 # temperature nodes
 θ = ['θ0', 'θ1', 'θ2', 'θ3', 'θ4', 'θ5', 'θ6', 'θ7', 'θ8', 'θ9', 'θ10', 'θ11', 'θ12', 'θ13', 'θ14', 'θ15', 'θ16', 'θ17', 'θ18']
@@ -172,7 +146,7 @@ pd.DataFrame(C, columns=['Capacity'])
 # flow-rate branches
 q = ['q0', 'q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9', 'q10', 'q11', 'q12', 'q13', 'q14', 'q15', 'q16', 'q17', 'q18', 'q19', 'q20', 'q21', 'q22', 'q23', 'q24']
 
-A = np.zeros([25, 19])          # n° of branches X n° of nodes
+A = np.zeros([nq, nθ])          # n° of branches X n° of nodes
 A[0, 0] = 1                     # branch 0: -> node 0
 A[1, 0], A[1, 1] = -1, 1        # branch 1: node 0, node 1
 A[2, 1], A[2, 2] = -1, 1        # branch 2: node 1, node 2
@@ -200,37 +174,38 @@ A[23, 17], A[23, 18] = 1, -1     # branch 23: node 17, node 18
 A[24, 18] = 1                   # branch 24: node 18
 pd.DataFrame(A, index=q, columns=θ)
 
-# Conductances
-G = np.array(np.hstack(
-    [Gw['out'],
-     2 * G_cd['Layer_out'],
-     2 * G_cd['Layer_out'],
-     2 * G_cd['Layer_in'],
-     2 * G_cd['Layer_in'],
-     Gw['in'],
-     Gw['in'],
-     2 * G_cd['Layer_in'],
-     2 * G_cd['Layer_in'],
-     Gw['in'],
-     Gw['in'],
-     2 * G_cd['Layer_in'],
-     2 * G_cd['Layer_in'],
-     2 * G_cd['Layer_out'],
-     2 * G_cd['Layer_out'],
-     Gw['out'],
-     GLW,
-     Ggs,
-     2 * G_cd['Glass'],
-     Gg['in'],
-     Gv,
-     Gg['in'],
-     GLW,
-     2 * G_cd['Glass'],
-     Ggs]))
+# Calculate the conductances
+G0 = ho*Sexta
+G1 = 1/2*concrete['Conductivity']*Sexta/w
+G2 = 1/2*concrete['Conductivity']*Sexta/w
+G3 = 1/2*insulation['Conductivity']*Sexta/w
+G4 = 1/2*insulation['Conductivity']*Sexta/w
+G5 = hi*Sexta
+G6 = hi*Sint
+G7 = 1/2*concrete['Conductivity']*Sint/wi
+G8 = 1/2*concrete['Conductivity']*Sint/wi
+G9 = hi*Sint
+G10 = hi*Sextb
+G11 = 1/2*insulation['Conductivity']*Sextb/w
+G12 = 1/2*insulation['Conductivity']*Sextb/w
+G13 = 1/2*concrete['Conductivity']*Sextb/w
+G14 = 1/2*concrete['Conductivity']*Sextb/w
+G15 = ho*Sextb
+G16 = ε_gLW / (1-ε_gLW) * Sga # long wave radiation in room a
+G17 = ho*Sga
+G18 = glass['Conductivity']*Sga/glass['Width']
+G19 = hi*Sga
+G20 = air['Specific heat'] * m_dot # transport through door
+G21 = hi*Sgb
+G22 = ε_gLW / (1-ε_gLW) * Sgb # long wave radiation in room b
+G23 = glass['Conductivity']*Sgb/glass['Width']
+G24 = ho*Sgb
+#G25 = Ka                # Controller constant for room a
+#G26 = Kb                # Controller constant for room b
 
-np.set_printoptions(precision=3, threshold=16, suppress=True)
-pd.set_option("display.precision", 1)
-pd.DataFrame(G, index=q)
+G = pd.Series([G1, G2, G3, G4, G5, G6, G7, G8, G9, G10, G11, G12, G13, G14, G15, G16, 0, T0, 0, 0, 0, 0, 0, 0, T0],
+              index=q)
+
 
 # # Capacities
 neglect_air_glass = False
@@ -251,6 +226,10 @@ b = pd.Series([T0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, T0, 0, T0, 0, 0, 0,
 f = pd.Series([Φoa, 0, 0, 0, Φia1, 0, Φia2, 0, Φib2, 0, Φib1, 0, 0, 0, Φob, Φa, 0, 0, Φa],
               index=θ)
 
-y = np.zeros(19)         # nodes
-# y[[6]] = 1             # nodes (temperatures) of interest
+#output matrix
+y = np.zeros(nθ)         # nodes
+y[[nfinal]] = 1              # nodes (temperatures) of interest
 pd.DataFrame(y, index=θ)
+
+[As, Bs, Cs, Ds, us] = dm4bem.tc2ss(A,G,b,C,f,y)
+
