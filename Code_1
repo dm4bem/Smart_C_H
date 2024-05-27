@@ -3,15 +3,26 @@ import pandas as pd
 from scipy.linalg import inv
 import matplotlib.pyplot as plt
 
-l = 10               # m length of the cubic room; w=5m, h=3m
-Sg = 3               # m² surface area of the glass window; w=3m, h=1m
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+import dm4bem
+
+h = 3               # m height of the building
+l = 5               # m length of the short sides of the building
+La = 4               # m length of room a
+Lb = 6                  # m length of room b
+Sga = 3               # m² surface area of the glass window; w=3m, h=1m
 Sgb = 9              # total window area in second room
-Sci = 78             # m² surface area of concrete & insulation of the 4 walls
-Sc = 13              # m² surface area of concrete of the 1 wall
+Sd = 2              # Surface area of the door between room a and b
+# Sci = 78             # m² surface area of concrete & insulation of the 4 walls
+# Sc = 13              # m² surface area of concrete of the 1 wall
 w = 0.2     # m, wall thickness
-S = 20.0    # m², wall surface area
-Sexta = 5*3-3+4*3*2     # Surface of outside walls for room a
-Sextb = 5*3-3+6*3*2       # Surface of outside walls for room b
+# S = 20.0    # m², wall surface area
+Sexta = l*h - Sga + La*h*2
+Sextb = l*h - Sgb + Lb*h*2
+Sint = w*h - Sd
 T0 = -5.0   # °C, outside air temperature
 Ti = 24.0   # °C, inside air temperature
 λ = 1.0     # W/(m·K), thermal conductivity
@@ -19,6 +30,36 @@ ho = 25.0   # W/(m²·K), outside convection coefficient
 hi = 8.0    # W/(m²·K), outside convection coefficient
 α = 0.70    # -, absorbtance of outdoor surface
 E = 200.0   # W/m², solar irradiance on the outdoor surface
+
+# Calculate the conductances
+G0 = ho*Sexta
+G1 = 1/2*lambda_c*Sexta/w
+G2 = 1/2*lambda_c*Sexta/w
+G3 = 1/2*lambda_i*Sexta/w
+G4 = 1/2*lambda_i*Sexta/w
+G5 = hi*Sexta
+G6 = hi*Sint
+G7 = 1/2*lambda_c*Sint/wi
+G8 = 1/2*lambda_c*Sint/wi
+G9 = hi*Sint
+G10 = hi*Sextb
+G11 = 1/2*lambda_i*Sextb/w
+G12 = 1/2*lambda_i*Sextb/w
+G13 = 1/2*lambda_c*Sextb/w
+G14 = 1/2*lambda_c*Sextb/w
+G15 = ho*Sextb
+G16 = # long wave radiation in room a
+G17 = ho*Sga
+G18 = lambda_g*Sga/wg
+G19 = hi*Sga
+G20 = # transport through door
+G21 = hi*Sgb
+G22 = # long wave radiation in room b
+G23 = lambda_g*Sgb/wg
+G24 = ho*Sgb
+G25 = Ka                # Controller constant for room a
+G26 = Kb                # Controller constant for room b
+# 
 
 air = {'Density': 1.2,                      # kg/m³
        'Specific heat': 1000}               # J/(kg·K)
