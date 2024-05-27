@@ -21,5 +21,15 @@ for elt in Lists[28].split(",")[1].split("/") :
 for k in range (0,24) :
     for elt in A[k]:
         elt = float(elt)
+for char in C :
+    if char == "C_Layer out" :
+        char = C['Layer_out'] 
+    elif char == "C_Layer in" :
+        char = C['Layer_in'] 
+    elif char == "C_Air" :
+        char = C['Air'] 
+    elif char == "C_Glass" :
+        char = C['Glass'] 
+    else : char = float(char)
 print(Phi)
 print (B)
