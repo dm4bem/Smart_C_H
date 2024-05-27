@@ -238,3 +238,40 @@ pd.DataFrame(y, index=θ)
 
 # [As, Bs, Cs, Ds, us] = fTC2SS(A,G,b,C,f,y)
 
+###############CSV######################
+
+TC = dm4bem.file2TC('Thermal Calculations - Matrices.csv', name='', auto_number=False)
+
+print(b)
+
+
+print('Matrices and vectors for thermal circuit from Figure 1') 
+df = pd.read_csv('Thermal Calculations - Matrices.csv')
+df.style.apply(lambda x: ['background-color: yellow'
+                          if x.name in df.index[-3:] or c in df.columns[-2:]
+                          else '' for c in df.columns], axis=1)
+
+# State-space
+[As, Bs, Cs, Ds, us] = dm4bem.tc2ss(TC)
+print(Bs)
+#print("Dimensions are: ", Bs.ndim)
+
+
+###############Steady state######################33
+bss = np.zeros(24)        # temperature sources b for steady state
+bss[[0, 15, 17, 23]] = -5      # outdoor temperature
+#bss[[24]] = -5            # indoor set-point temperature
+
+fss = np.zeros(19)         # flow-rate sources f for steady state
+
+#
+
+
+#
+A = TC['A']
+G = TC['G']
+diag_G = pd.DataFrame(np.diag(G), index=G.index, columns=G.index)
+
+θss = np.linalg.inv(A.T @ diag_G @ A.to_numpy()) @ (A.T @ diag_G @ bss + fss)
+print(f'θss = {np.around(θss, 2)} °C')
+
