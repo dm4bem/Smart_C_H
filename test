@@ -31,5 +31,22 @@ for char in C :
     elif char == "C_Glass" :
         char = C['Glass'] 
     else : char = float(char)
+
+for char in Phi :
+    if char == "phi_oa" :
+        char = phi_oa 
+    elif char == "phi_ia1" :
+        char = phi_ia1 
+    elif char == "phi_ia2" :
+        char = phi_ia2
+    elif char == "phi_ib1" :
+        char = phi_ib1
+    elif char == "phi_ib2" :
+            char = phi_ib2    
+    elif char == "phi_ob" :
+        char = phi_ob*
+    elif char == "phi_a" :
+        char = phi_a
+    else : char = float(char)
 print(Phi)
 print (B)
