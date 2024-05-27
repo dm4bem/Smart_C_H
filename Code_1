@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import dm4bem
+#import dm4bem
 
 h = 3               # m height of the building
 l = 5               # m length of the short sides of the building
@@ -218,6 +218,11 @@ else:
 pd.set_option("display.precision", 3)
 pd.DataFrame(C, index=θ)
 
+# C['Layer_out'] = concrete['Density'] * concrete['Specific heat'] * concrete['Surface'] * concrete['Width']
+# C['Layer_in'] = insulation['Density'] * insulation['Specific heat'] * insulation['Surface'] * insulation['Width']
+# C['Air'] = air['Density'] * air['Specific heat'] * Va
+# C['Glass'] = glass['Density'] * glass['Specific heat'] * glass['Surface'] * glass['Width']
+
 #temperature source network
 b = pd.Series([T0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, T0, 0, T0, 0, 0, 0, 0, 0, 0, T0],
               index=q)
@@ -231,5 +236,5 @@ y = np.zeros(nθ)         # nodes
 y[[nfinal]] = 1              # nodes (temperatures) of interest
 pd.DataFrame(y, index=θ)
 
-[As, Bs, Cs, Ds, us] = dm4bem.tc2ss(A,G,b,C,f,y)
+# [As, Bs, Cs, Ds, us] = fTC2SS(A,G,b,C,f,y)
 
