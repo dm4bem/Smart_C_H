@@ -1,5 +1,57 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+h = 3                     # m height of the building
+l = 5                     # m length of the short sides of the building
+La = 4                    # m length of room a
+Lb = 6                    # m length of room b
+Sg = 3                    # m² surface area of the glass window; w=3m, h=1m
+Sd = 2                    # Surface area of the door between room a and b; w=1m, h=2m
+Sa = l*h - Sg + La*h*2
+Sb = l*h + Lb*h*2
+Sintw = l*h - Sd
+To = -5.0                 # °C, outside air temperature
+Tsp = 25                  # Controller temperature
+# Ti = 24.0               # °C, inside air temperature
+ho = 25.0                 # W/(m²·K), outside convection coefficient
+hi = 8.0                  # W/(m²·K), outside convection coefficient
+αo = 0.70                 # short wave absorptivity: outdoor surface
+αi = 0.25                 # short wave absorptivity: white smooth surface
+αiw = 0.38                # short wave absorptivity: reflective blue glass
+E = 200.0                 # W/m², solar irradiance on the outdoor surface
+
+air = {'Density': 1.2,                      # kg/m³
+       'Specific heat': 1000}               # J/(kg·K)
+pd.DataFrame(air, index=['Air'])
+
+np.set_printoptions(precision=1)
+
+
+concrete = {'Conductivity': 1.400,          # W/(m·K)
+            'Density': 2300.0,              # kg/m³
+            'Specific heat': 880,           # J/(kg⋅K)
+            'Width': 0.2}                   # m
+
+glass = {'Conductivity': 1.4,               # W/(m·K)
+         'Density': 2500,                   # kg/m³
+         'Specific heat': 1210,             # J/(kg⋅K)
+         'Width': 0.04}                     # m
+
+wall = pd.DataFrame.from_dict({'Concrete': concrete,
+                               'Glass': glass},
+                              orient='index')
+
+# Ventilation flow rate
+Va = l*La*h                              # m³, volume of air for room a
+Vb = l*Lb*h                              # m³, volume of air for room b
+Vt = Va + Vb                             # m³, total volume of air
+ACH = 0.5                                # air changes per hour
+Va_d = (ACH / 3600)                      # m³/s, air infiltration
+
+
 ########## A matrix ##########
-nq, nθ = 18, 14  # number of flow-rates branches and temperature nodes
+nq, nθ = 18, 14                 # number of flow-rates branches and temperature nodes
 
 A = np.zeros([nq, nθ])          # n° of branches X n° of nodes
 
@@ -80,32 +132,32 @@ G[17] = hi * Sg
 
 ########## b matrix ##########
 b = np.zeros(A.shape[0])
-b[[0,1,14]] = To         # outdoor temperature for walls
-b[13] = Tsp              # Controller temperature for room b
+b[[0,1,14]] = To               # outdoor temperature for walls
+b[13] = Tsp                    # Controller temperature for room b
 
 ########## C matrix ##########
 C = np.zeros(A.shape[1])
 C[1] = concrete['Density'] * Va_d * Va * concrete['Specific heat']         # Capacitances in Concrete Wall for room a
 C[9] = concrete['Density'] * Va_d * Vb * concrete['Specific heat']         # Capacitances in Concrete Wall for room b
 C[5] = concrete['Density'] * Va_d * Vt * concrete['Specific heat']         # Capacitances in Concrete Wall for inner wall
-C[12] = glass['Density'] * Va_d * Va * glass['Specific heat']         # Capacitances in Glass window
+C[12] = glass['Density'] * Va_d * Va * glass['Specific heat']              # Capacitances in Glass window
 
 ########## f matrix ##########
 f = np.zeros(A.shape[1])
 f[0] = αo * Sa * E                     # Outdoor Radiation absorbed for room a
 f[10] = αo * Sb * E                    # Outdoor Radiation absorbed for room b
-f[2] = αi * Sa * E                       # Indoor Radiation absorbed for room a
-f[8] = αi * Sb * E                       # Indoor Radiation absorbed for room b 
-f[[4,6]] = αi * Sintw * E                       # Indoor Radiation absorbed for inner-wall 
-f[11] = αo * Sg * E                       # Outdoor Radiation absorbed for Window
-f[13] = αiw * Sg * E                       # Indoor Radiation absorbed for Window
+f[2] = αi * Sa * E                     # Indoor Radiation absorbed for room a
+f[8] = αi * Sb * E                     # Indoor Radiation absorbed for room b 
+f[[4,6]] = αi * Sintw * E              # Indoor Radiation absorbed for inner-wall 
+f[11] = αo * Sg * E                    # Outdoor Radiation absorbed for Window
+f[13] = αiw * Sg * E                   # Indoor Radiation absorbed for Window
 
 ########## Outputs ##########
-indoor_air = [3, 7]         # indoor air temperature nodes
-controller = [13]            # controller node
+indoor_air = [3, 7]           # indoor air temperature nodes
+controller = [13]             # controller node
 
-b[controller] = Tsp          # °C setpoint temperature for room b
-G[controller] = 1e4         # P-controller gain
+b[controller] = Tsp           # °C setpoint temperature for room b
+G[controller] = 1e4           # P-controller gain
 
 θ = np.linalg.inv(np.diag(C) + A.T @ np.diag(G) @ A) @ (A.T @ np.diag(G) @ b + f)
 q = np.diag(G) @ (-A @ θ + b)
