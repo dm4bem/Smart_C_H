@@ -159,11 +159,11 @@ controller = [13]             # controller node
 b[controller] = Tsp           # °C setpoint temperature for room b
 G[controller] = 1e4           # P-controller gain
 
-θ = np.linalg.inv(np.diag(C) + A.T @ np.diag(G) @ A) @ (A.T @ np.diag(G) @ b + f)
-q = np.diag(G) @ (-A @ θ + b)
-print("Only Room b is controlled")
-print("θ:", θ[indoor_air], "°C")
-print("q:", q[controller], "W")      # The thermal loads are the heat flow rates of the controllers
+# θ = np.linalg.inv(np.diag(C) + A.T @ np.diag(G) @ A) @ (A.T @ np.diag(G) @ b + f)
+# q = np.diag(G) @ (-A @ θ + b)
+# print("Only Room b is controlled")
+# print("θ:", θ[indoor_air], "°C")
+# print("q:", q[controller], "W")      # The thermal loads are the heat flow rates of the controllers
 
 ########## State-space Equations ##########
 
@@ -182,7 +182,7 @@ Cs = np.eye(nθ)
 # Direct transmission matrix Ds (assuming no direct transmission)
 Ds = np.zeros((nθ, 1))
 
-print("State matrix As:\n", As)
-print("Input matrix Bs:\n", Bs)
-print("Output matrix Cs:\n", Cs)
-print("Direct transmission matrix Ds:\n", Ds)
+# print("State matrix As:\n", As)
+# print("Input matrix Bs:\n", Bs)
+# print("Output matrix Cs:\n", Cs)
+# print("Direct transmission matrix Ds:\n", Ds)
