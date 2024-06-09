@@ -159,8 +159,8 @@ controller = [13]             # controller node
 b[controller] = Tsp           # °C setpoint temperature for room b
 G[controller] = 1e4           # P-controller gain
 
-# θ = np.linalg.inv(np.diag(C) + A.T @ np.diag(G) @ A) @ (A.T @ np.diag(G) @ b + f)
-# q = np.diag(G) @ (-A @ θ + b)
+θ = np.linalg.inv(np.diag(C) + A.T @ np.diag(G) @ A) @ (A.T @ np.diag(G) @ b + f)
+q = np.diag(G) @ (-A @ θ + b)
 # print("Only Room b is controlled")
 # print("θ:", θ[indoor_air], "°C")
 # print("q:", q[controller], "W")      # The thermal loads are the heat flow rates of the controllers
