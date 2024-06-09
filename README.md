@@ -1,3 +1,3 @@
 # Smart_C_H
-
-Binder link: https://hub.binder.curvenote.dev/user/dm4bem-smart_c_h-kt2lw3je/lab
+This is our thermal model analysis project.
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dm4bem/Smart_C_H/main?labpath=Smart_C_H.ipynb)
