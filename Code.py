@@ -183,9 +183,9 @@ Ds = np.zeros((nθ, 1))
 ########## Step response ##########
 
 # Define the time parameters
-dt = 1.0  # Reduced time step for better stability
-total_time = 24 * 3600  # Total simulation time in seconds (24 hours)
-time_steps = np.arange(0, total_time, dt)
+dt = 1.0  # Time step in hours
+total_time = 24  # Total simulation time in hours (24 hours)
+time_steps = np.arange(0, total_time + dt, dt)
 
 # Initialize temperature array
 theta = np.zeros((len(time_steps), nθ))
