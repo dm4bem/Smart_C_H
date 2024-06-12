@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+# Building dimensions and properties
 h = 3                     # m height of the building
 l = 5                     # m length of the short sides of the building
 La = 4                    # m length of room a
@@ -161,9 +162,6 @@ G[controller] = 1e4           # P-controller gain
 
 θ = np.linalg.inv(np.diag(C) + A.T @ np.diag(G) @ A) @ (A.T @ np.diag(G) @ b + f)
 q = np.diag(G) @ (-A @ θ + b)
-# print("Only Room b is controlled")
-# print("θ:", θ[indoor_air], "°C")
-# print("q:", q[controller], "W")      # The thermal loads are the heat flow rates of the controllers
 
 ########## State-space Equations ##########
 
@@ -182,7 +180,37 @@ Cs = np.eye(nθ)
 # Direct transmission matrix Ds (assuming no direct transmission)
 Ds = np.zeros((nθ, 1))
 
-# print("State matrix As:\n", As)
-# print("Input matrix Bs:\n", Bs)
-# print("Output matrix Cs:\n", Cs)
-# print("Direct transmission matrix Ds:\n", Ds)
+########## Step response ##########
+
+# Define the time parameters
+dt = 1.0  # Reduced time step for better stability
+total_time = 24 * 3600  # Total simulation time in seconds (24 hours)
+time_steps = np.arange(0, total_time, dt)
+
+# Initialize temperature array
+theta = np.zeros((len(time_steps), nθ))
+theta[0, :] = θ  # Initial condition
+
+# Apply a step change in outdoor temperature at t = 0
+To_step = 0.0  # New outdoor temperature after the step change
+b[[0, 1, 14]] = To_step
+
+# Regularization term to stabilize As
+regularization_term = 1e-5
+As_reg = As - regularization_term * np.eye(nθ)
+
+# Function to perform backward Euler integration step
+def backward_euler_step(theta_prev, As_reg, Bs, dt):
+    I = np.eye(len(As_reg))
+    theta_dot = np.linalg.inv(I - dt * As_reg) @ (theta_prev + dt * Bs.flatten())
+    return theta_dot
+
+# Calculate the step response
+for i in range(1, len(time_steps)):
+    try:
+        theta[i, :] = backward_euler_step(theta[i-1, :], As_reg, Bs, dt)
+        if np.any(np.abs(theta[i, :]) > 1e10):
+            raise OverflowError("Potential overflow detected in theta.")
+    except OverflowError as e:
+        print(f"Overflow detected at step {i}. Clamping values.")
+        theta[i, :] = np.clip(theta[i, :], -1e10, 1e10)  # Clamp values to prevent overflow
