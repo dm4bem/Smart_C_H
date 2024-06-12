@@ -1,0 +1,64 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Thermal Model Analysis",
+    "",
+    "This notebook runs the thermal model analysis using the `Code.py` script."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Import necessary libraries",
+    "import numpy as np",
+    "",
+    "# Run the Code.py script",
+    "%run Code.py",
+    "",
+    "# Display A matrix",
+    "print(\"A matrix (connectivity):\")",
+    "print(A)",
+    "",
+    "# Display G matrix",
+    "print(\"\\nG matrix (conductance):\")", 
+    "print(G)",
+    "",
+    "# Display C matrix",
+    "print(\"\\nC matrix (capacitances):\")",
+    "print(C)",
+    "",
+    "# Display b matrix",
+    "print(\"\\nb matrix (external temperatures and sources):\")",
+    "print(b)",
+    "",
+    "# Display f matrix",
+    "print(\"\\nf matrix (absorbed solar radiation and internal sources):\")",
+    "print(f)",
+    "",
+    "# Display individual room temperatures",
+    "print(\"\\nIndoor air temperatures:\")",
+    "print(\"Room A temperature:\", θ[3], \"°C\")",
+    "print(\"Room B temperature:\", θ[7], \"°C\")",
+    "",
+    "# Display thermal load",
+    "print(\"\\nController thermal load (Room B):\", q[controller], \"W\")",
+    "",
+    "# Display state-space matrices",
+    "print(\"\\nState-space representation matrices:\")",
+    "print(\"As:\\n\", As)",
+    "print(\"Bs:\\n\", Bs)", 
+    "print(\"Cs:\\n\", Cs)",
+    "print(\"Ds:\\n\", Ds)"
+   ]
+  }
+ ],
+ "metadata": {},
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
